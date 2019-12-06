@@ -17,14 +17,19 @@ func TestUser_GetUser(t *testing.T) {
 
 	user := User{}
 	expectedUser := User{
-		Username: "plinio",
+		Username: "test",
 		Password: "$2a$04$vRlRz0WiJVvP13k4boYY3eA2Ye8OOTyixWFFYiL.eACzvX2Z5JEBm",
 	}
 	db := Service{Db: dbConn}
-	err = user.GetUser(&db, "plinio")
+	user.New(db)
+	err = user.GetUser("test")
 	checkErrorAndPanic(err)
 
-	if reflect.DeepEqual(user, expectedUser) == false {
+	fieldsToCheck := User{
+		Username: user.Username,
+		Password: user.Password,
+	}
+	if reflect.DeepEqual(fieldsToCheck, expectedUser) == false {
 		t.Errorf("retrieved user mismatch got: %v - expected %v\n", user, expectedUser)
 	}
 }

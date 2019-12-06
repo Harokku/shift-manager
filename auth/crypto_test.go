@@ -3,7 +3,7 @@ package auth
 import "testing"
 
 func TestComparePassword(t *testing.T) {
-	var pwd = []byte("plinioilbasso")
+	var pwd = "plinioilbasso"
 
 	hashedPwd, err := HashAndSalt(pwd)
 	if err != nil {

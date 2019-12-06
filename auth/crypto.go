@@ -2,8 +2,9 @@ package auth
 
 import "golang.org/x/crypto/bcrypt"
 
-func HashAndSalt(pwd []byte) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+func HashAndSalt(pwd string) (string, error) {
+	bytePwd := []byte(pwd)
+	hash, err := bcrypt.GenerateFromPassword(bytePwd, bcrypt.MinCost)
 	if err != nil {
 		return "", err
 	}
@@ -11,10 +12,11 @@ func HashAndSalt(pwd []byte) (string, error) {
 	return string(hash), nil
 }
 
-func ComparePassword(hashPwd string, plainPwd []byte) bool {
+func ComparePassword(hashPwd string, plainPwd string) bool {
 	byteHash := []byte(hashPwd)
+	bytePlain := []byte(plainPwd)
 
-	err := bcrypt.CompareHashAndPassword(byteHash, plainPwd)
+	err := bcrypt.CompareHashAndPassword(byteHash, bytePlain)
 	if err != nil {
 		return false
 	}

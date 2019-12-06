@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"shift-manager/db"
 )
 
 func main() {
@@ -29,6 +30,8 @@ func main() {
 	err = dbConn.Ping()
 	checkErrorAndPanic(err)
 	fmt.Println("Correctly pinged DB")
+	// Create a new db service to interact with Heroku's DB
+	//dbService := db.Service{Db: dbConn}
 
 	// -----------------------
 	// Echo server definition
