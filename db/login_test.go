@@ -1,10 +1,9 @@
-package auth
+package db
 
 import (
 	"database/sql"
 	"log"
 	"os"
-	"shift-manager/db"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ func TestLogin(t *testing.T) {
 	checkErrorAndPanic(err)
 
 	defer dbConn.Close()
-	database := db.Service{Db: dbConn}
+	database := Service{Db: dbConn}
 
 	_, err = Login("test", "plinioilbasso", database)
 	if err != nil {

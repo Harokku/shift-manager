@@ -1,4 +1,4 @@
-package auth
+package db
 
 import (
 	"errors"
@@ -6,12 +6,12 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"os"
-	"shift-manager/db"
+	"shift-manager/auth"
 	"time"
 )
 
-func Login(username, password string, s db.Service) (string, error) {
-	user := db.User{}
+func Login(username, password string, s Service) (string, error) {
+	user := User{}
 	user.New(s)
 
 	err := user.GetUser(username)
@@ -19,7 +19,7 @@ func Login(username, password string, s db.Service) (string, error) {
 		return "", err
 	}
 
-	if !ComparePassword(user.Password, password) {
+	if !auth.ComparePassword(user.Password, password) {
 		return "", echo.ErrUnauthorized
 	}
 

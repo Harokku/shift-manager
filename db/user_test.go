@@ -2,8 +2,8 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
-	"log"
 	"os"
 	"reflect"
 	"testing"
@@ -34,9 +34,27 @@ func TestUser_GetUser(t *testing.T) {
 	}
 }
 
-// Default error check with fatal if err != nil
-func checkErrorAndPanic(err error) {
+func TestUser_CreateUser(t *testing.T) {
+	dbConn, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	checkErrorAndPanic(err)
+
+	defer dbConn.Close()
+
+	// Test credential
+	username := "testCreate"
+	password := "test"
+
+	// User DB service creation
+	user := User{}
+	db := Service{Db: dbConn}
+	user.New(db)
+	err = user.CreateUser(username, password)
 	if err != nil {
-		log.Fatal(err)
+		t.Errorf("Error occurred while creating new user: %v\n", err)
+	}
+	fmt.Printf("Created new user: %v\n", user)
+	err = user.DeleteUser(username)
+	if err != nil {
+		t.Errorf("Error occurred whiel deleting test user: %v - Manual intervention required to clean user: testCreate \n", err)
 	}
 }

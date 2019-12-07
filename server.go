@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"shift-manager/db"
 )
 
 func main() {
