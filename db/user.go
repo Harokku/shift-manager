@@ -1,0 +1,82 @@
+package db
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"github.com/lib/pq"
+	"shift-manager/auth"
+)
+
+type User struct {
+	service  Service
+	Id       string   `json:"id"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Roles    []string `json:"roles"`
+}
+
+func (u *User) New(s Service) {
+	u.service = s
+}
+
+func (u *User) GetUser(username string) error {
+	sqlStatement := `SELECT username, password,roles FROM users WHERE username=$1`
+	row := u.service.Db.QueryRow(sqlStatement, username)
+	switch err := row.Scan(&u.Username, &u.Password, pq.Array(&u.Roles)); err {
+	case sql.ErrNoRows:
+		return errors.New("no row where retrieved")
+	case nil:
+		return nil
+	default:
+		return errors.New(fmt.Sprintf("error retrieving user from database: %v\n", err))
+	}
+}
+
+func (u *User) CreateUser(username, password string) error {
+	sqlStatement := `
+		INSERT INTO users (username, password)
+		VALUES ($1,$2)
+		RETURNING id
+`
+	hashedPwd, err := auth.HashAndSalt(password)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error hashing password: %v\n", err))
+	}
+
+	err = u.service.Db.QueryRow(sqlStatement, username, hashedPwd).Scan(&u.Id)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error creating new user: %v\n", err))
+	}
+	return nil
+}
+
+func (u *User) ResetPassword(username, password string) error {
+	sqlStatement := `
+		UPDATE users
+		SET password = $2
+		WHERE username=$1
+`
+	hashedPwd, err := auth.HashAndSalt(password)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error hashing password: %v\n", err))
+	}
+
+	_, err = u.service.Db.Exec(sqlStatement, username, hashedPwd)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error occurred while resetting password: %v\n", err))
+	}
+	return nil
+}
+
+func (u *User) DeleteUser(username string) error {
+	sqlStatement := `
+		DELETE FROM users
+		WHERE username = $1
+`
+	_, err := u.service.Db.Exec(sqlStatement, username)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error deleting user: %v\n", err))
+	}
+	return nil
+}

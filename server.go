@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"shift-manager/api"
+	"shift-manager/db"
 )
 
 func main() {
@@ -29,6 +31,8 @@ func main() {
 	err = dbConn.Ping()
 	checkErrorAndPanic(err)
 	fmt.Println("Correctly pinged DB")
+	// Create a new db service to interact with Heroku's DB
+	dbService := db.Service{Db: dbConn}
 
 	// -----------------------
 	// Echo server definition
@@ -46,6 +50,25 @@ func main() {
 
 	e.GET("/ping", func(context echo.Context) error {
 		return context.JSON(http.StatusOK, "Pong")
+	})
+
+	// -----------------------
+	// Routes
+	// -----------------------
+
+	e.POST("/login", api.Login(&dbService))
+
+	// Admin group
+	admin := e.Group("/admin", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	admin.GET("", func(context echo.Context) error {
+		return context.String(http.StatusNoContent, "Admin route root")
+	})
+	admin.POST("/passwordreset", api.ResetPwd(&dbService))
+
+	// Gsheet group
+	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	gSheet.GET("", func(context echo.Context) error {
+		return context.String(http.StatusNoContent, "Google Sheets route root")
 	})
 
 	// -----------------------
