@@ -14,7 +14,7 @@ func TestLogin(t *testing.T) {
 	defer dbConn.Close()
 	database := Service{Db: dbConn}
 
-	_, err = Login("test", "plinioilbasso", database)
+	_, err = CreateToken("test", "plinioilbasso", database)
 	if err != nil {
 		t.Errorf("Token creation failed: %v\n", err)
 	}

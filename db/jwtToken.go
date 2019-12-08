@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func Login(username, password string, s Service) (string, error) {
+func CreateToken(username, password string, s Service) (string, error) {
 	user := User{}
 	user.New(s)
 
