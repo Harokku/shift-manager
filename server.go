@@ -60,7 +60,16 @@ func main() {
 
 	// Admin group
 	admin := e.Group("/admin", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	admin.GET("", func(context echo.Context) error {
+		return context.String(http.StatusNoContent, "Admin route root")
+	})
 	admin.POST("/passwordreset", api.ResetPwd(&dbService))
+
+	// Gsheet group
+	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	gSheet.GET("", func(context echo.Context) error {
+		return context.String(http.StatusNoContent, "Google Sheets route root")
+	})
 
 	// -----------------------
 	// Server Start
