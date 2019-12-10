@@ -56,6 +56,7 @@ func main() {
 	// Routes
 	// -----------------------
 
+	// Login route
 	e.POST("/login", api.Login(&dbService))
 
 	// Admin group
@@ -70,10 +71,24 @@ func main() {
 	gSheet.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Google Sheets route root")
 	})
+	gSheet.POST("/shift", api.PostShift())
 
 	// -----------------------
 	// Server Start
 	// -----------------------
+
+	/*g := gsuite.Service{}
+	g.New()
+	var dataToAppend [][]interface{}
+	dataToAppend = [][]interface{}{
+		{"Test","Data"},
+		{"New","Row"},
+	}
+	res, err := g.Append("Cartellini!A2", dataToAppend)
+	if err != nil {
+		fmt.Printf("Error appending data to sheet: %v\n", err)
+	}
+	fmt.Printf("Responded with: %v\n", res)*/
 
 	e.Logger.Fatal(e.Start(":" + port))
 }
