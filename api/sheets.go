@@ -27,54 +27,69 @@ type shift struct {
 func PostShift() echo.HandlerFunc {
 	return func(context echo.Context) error {
 		sheetService := gsuite.Service{}
-		sheetService.New()
+		err := sheetService.New()
+		if err != nil {
+			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error creating gSheet service: %v\n", err))
+		}
 
 		var s shift
 		// Add post timestamp
 		s.Timestamp = time.Now()
 
+		// Bind request boy to shift struct
 		if err := context.Bind(&s); err != nil {
-			return context.String(http.StatusBadRequest, fmt.Sprintf("Error binding request body: %v", err))
+			return context.String(http.StatusBadRequest, fmt.Sprintf("Error binding request body: %v\n", err))
 		}
 
-		var d [][]interface{}
-		d = append(d, s.marshal())
-		_, err := sheetService.Append("Cartellini!A4", d)
+		err = s.setDefaults()
 		if err != nil {
-			context.String(http.StatusBadRequest, fmt.Sprintf("Error posting data to Google sheet: %v\n", err))
+			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error checking for defaults: %v\n", err))
+		}
+
+		// d is data casted and ready to be appended to google sheet
+		var d [][]interface{}
+		d = append(d, s.marshalGSheet())
+		_, err = sheetService.Append("Cartellini!A4", d)
+		if err != nil {
+			return context.String(http.StatusBadRequest, fmt.Sprintf("Error posting data to Google sheet: %v\n", err))
 		}
 		return context.String(http.StatusCreated, "Succesfully posted data to Google sheet")
 	}
 }
 
-// preparePost prepare shift according to flags, setting null fields and default values if needed
-func (s *shift) preparePost() error {
+// setDefaults retrieve default shift from gsheet and set default value
+func (s *shift) setDefaults() error {
+	if s.ManualCompilation {
+		return nil
+	}
+	// TODO: Implement default shift lookup and value set
+	fmt.Printf("Reading shift data and setting shift...\n")
 	return nil
 }
 
 // Marshal encode the struct as gsheet Value type ready to be posted
 // Set null field as blank string
-func (s shift) marshal() []interface{} {
+func (s shift) marshalGSheet() []interface{} {
+	dateLayout := "02-01-2006"
+	timeLayout := "15:04"
 	var i []interface{}
 
 	// Append non nullable fields
-	i = append(i, s.Timestamp, s.Name, s.Date, s.Shift, s.Vehicle, s.Role)
+	i = append(i, s.Timestamp.Format(dateLayout), s.Name, s.Date.Format(dateLayout), s.Shift, s.Vehicle, s.Role)
 
 	// If DidOverwork is false, set to blank string
 	if s.DidOverwork {
-		i = append(i, s.DidOverwork, s.OverworkEnd, s.Mission)
+		i = append(i, s.DidOverwork, s.OverworkEnd.Format(timeLayout), s.Mission)
 	} else {
 		i = append(i, s.DidOverwork, "", "")
 	}
 
 	// If StampForgot is false, set to blank string
 	if s.StampForgot {
-		i = append(i, s.StampForgot, s.ShiftStart, s.ShiftEnd)
+		i = append(i, s.StampForgot, s.ShiftStart.Format(timeLayout), s.ShiftEnd.Format(timeLayout))
 	} else {
 		i = append(i, s.StampForgot, "", "")
 	}
-
-	fmt.Printf("New interface: %v\n", i)
 
 	return i
 }
