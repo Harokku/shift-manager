@@ -43,6 +43,9 @@ func main() {
 		Format: "time=${time_rfc3339}, method=${method}, uri=${uri}, status=${status}, latency=${latency_human}\n",
 	}))
 
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+
 	// -----------------------
 	// Static definition
 	// -----------------------
@@ -56,6 +59,7 @@ func main() {
 	// Routes
 	// -----------------------
 
+	// Login route
 	e.POST("/login", api.Login(&dbService))
 
 	// Admin group
@@ -70,6 +74,7 @@ func main() {
 	gSheet.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Google Sheets route root")
 	})
+	gSheet.POST("/shift", api.PostShift())
 
 	// -----------------------
 	// Server Start
