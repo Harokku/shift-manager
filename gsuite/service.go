@@ -41,6 +41,7 @@ func (s Service) Append(r string, data [][]interface{}) (int, error) {
 	var values = sheets.ValueRange{
 		Values: data,
 	}
+
 	res, err := s.srv.Spreadsheets.Values.Append(s.sheetId, r, &values).ValueInputOption("USER_ENTERED").Do()
 	if err != nil {
 		return 0, err
