@@ -55,7 +55,7 @@ func ResetPwd(s *db.Service) echo.HandlerFunc {
 			if err != nil {
 				return context.String(http.StatusBadRequest, fmt.Sprintf("Error resetting password for user %v: %v", r.Username, err))
 			}
-			return context.String(http.StatusOK, fmt.Sprintf("Password reset for user %v", u.Username))
+			return context.String(http.StatusOK, fmt.Sprintf("Password reset for user %v", r.Username))
 		}
 		return context.String(http.StatusUnauthorized, "User is not admin, can't reset password")
 	}
