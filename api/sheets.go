@@ -13,6 +13,7 @@ type shift struct {
 	ManualCompilation bool      `json:"manual_compilation"`
 	Name              string    `json:"name"`
 	Date              time.Time `json:"date"`
+	Location          string    `json:"location"`
 	Shift             string    `json:"shift"`
 	Vehicle           string    `json:"vehicle"`
 	Role              string    `json:"role"`
@@ -75,7 +76,7 @@ func (s shift) marshalGSheet() []interface{} {
 	var i []interface{}
 
 	// Append non nullable fields
-	i = append(i, s.Timestamp.Format(dateLayout), s.Name, s.Date.Format(dateLayout), s.Shift, s.Vehicle, s.Role)
+	i = append(i, s.Timestamp.Format(dateLayout), s.Name, s.Date.Format(dateLayout), s.Location, s.Shift, s.Vehicle, s.Role)
 
 	// If DidOverwork is false, set to blank string
 	if s.DidOverwork {
