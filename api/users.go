@@ -29,6 +29,25 @@ func Login(s *db.Service) echo.HandlerFunc {
 	}
 }
 
+func GetUserDetailsFromClaims(s *db.Service) echo.HandlerFunc {
+	return func(context echo.Context) error {
+		// Read user from JWT and extract username claim
+		user := context.Get("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		username := claims["username"].(string)
+
+		// Call db API to get user detail
+		u := db.User{}
+		u.New(*s)
+
+		err := u.GetUserDetail(username)
+		if err != nil {
+			return context.String(http.StatusBadRequest, fmt.Sprintf("Error retrieving user's detail: %v\n", err))
+		}
+		return context.JSON(http.StatusOK, u)
+	}
+}
+
 func ResetPwd(s *db.Service) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		// Read user from JWT and extract claims

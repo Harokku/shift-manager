@@ -62,14 +62,21 @@ func main() {
 	// Login route
 	e.POST("/login", api.Login(&dbService))
 
-	// Admin group
+	// Admin group (req auth)
 	admin := e.Group("/admin", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	admin.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Admin route root")
 	})
 	admin.POST("/passwordreset", api.ResetPwd(&dbService))
 
-	// Gsheet group
+	// Users group (req auth)
+	users := e.Group("/users", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	users.GET("", func(context echo.Context) error {
+		return context.String(http.StatusNoContent, "Users management route root")
+	})
+	users.GET("/userdetails", api.GetUserDetailsFromClaims(&dbService))
+
+	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	gSheet.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Google Sheets route root")

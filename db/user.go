@@ -14,6 +14,9 @@ type User struct {
 	Username string   `json:"username"`
 	Password string   `json:"password"`
 	Roles    []string `json:"roles"`
+	Surname  string   `json:"surname"`
+	Name     string   `json:"name"`
+	Mail     string   `json:"mail"`
 }
 
 func (u *User) New(s Service) {
@@ -27,6 +30,30 @@ func (u *User) GetUser(username string) error {
 	case sql.ErrNoRows:
 		return errors.New("no row where retrieved")
 	case nil:
+		return nil
+	default:
+		return errors.New(fmt.Sprintf("error retrieving user from database: %v\n", err))
+	}
+}
+
+func (u *User) GetUserDetail(username string) error {
+	sqlStatement := `SELECT
+						   u.username,
+						   o.surname,
+						   o.name,
+						   o.mail
+					FROM users u
+					INNER JOIN operators o on u.id = o."user"
+					WHERE u.username = $1`
+
+	row := u.service.Db.QueryRow(sqlStatement, username)
+	switch err := row.Scan(&u.Username, &u.Surname, &u.Name, &u.Mail); err {
+	case sql.ErrNoRows:
+		return errors.New("no row where retrieved")
+	case nil:
+		// Doubleckeck that no password or ID field is returned explicitly setting it to null
+		u.Password = ""
+		u.Id = ""
 		return nil
 	default:
 		return errors.New(fmt.Sprintf("error retrieving user from database: %v\n", err))
