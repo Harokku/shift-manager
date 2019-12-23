@@ -76,12 +76,22 @@ func main() {
 	})
 	users.GET("/userdetails", api.GetUserDetailsFromClaims(&dbService))
 
+	// Shift data
+	shiftData := e.Group("/shiftdata")
+	shiftData.GET("/all", api.GetAllFormData(&dbService))
+
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	gSheet.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Google Sheets route root")
 	})
 	gSheet.POST("/shift", api.PostShift())
+
+	// TODO: disable in prod
+	// Test routes
+	test := e.Group("test")
+	test.GET("/single/:name", api.GetLocation(&dbService))
+	test.GET("/all", api.GetAllLocations(&dbService))
 
 	// -----------------------
 	// Server Start
