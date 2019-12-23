@@ -87,12 +87,6 @@ func main() {
 	})
 	gSheet.POST("/shift", api.PostShift())
 
-	// TODO: disable in prod
-	// Test routes
-	test := e.Group("test")
-	test.GET("/single/:name", api.GetLocation(&dbService))
-	test.GET("/all", api.GetAllLocations(&dbService))
-
 	// -----------------------
 	// Server Start
 	// -----------------------
