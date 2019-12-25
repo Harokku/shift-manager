@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"net/http"
+	"os"
 	"shift-manager/gsuite"
 	"time"
 )
@@ -28,7 +29,7 @@ type shift struct {
 func PostShift() echo.HandlerFunc {
 	return func(context echo.Context) error {
 		sheetService := gsuite.Service{}
-		err := sheetService.New()
+		err := sheetService.New(os.Getenv("SHEET_ID"))
 		if err != nil {
 			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error creating gSheet service: %v\n", err))
 		}

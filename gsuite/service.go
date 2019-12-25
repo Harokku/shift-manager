@@ -5,7 +5,6 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
-	"log"
 	"os"
 )
 
@@ -14,22 +13,22 @@ type Service struct {
 	sheetId string
 }
 
-// Represent Google API service with auth and sheet ID read from env
+// Represent Google API service with auth and sheetId ID read from env
 // GOOGLE_API is the auth secret
-// SHEETS_ID is the sheet to read from
-func (s *Service) New() error {
+// SHEETS_ID is the sheetId to read from
+func (s *Service) New(sheetId string) error {
 	secret := os.Getenv("GOOGLE_API")
 	if secret == "" {
 		panic("Can't read secret from env.")
 	}
 	conf, err := google.JWTConfigFromJSON([]byte(secret), sheets.SpreadsheetsScope)
-	checkErrorAndPanic(err)
+	CheckErrorAndPanic(err)
 
 	srv, err := sheets.NewService(context.TODO(), option.WithHTTPClient(conf.Client(context.TODO())))
-	checkErrorAndPanic(err)
+	CheckErrorAndPanic(err)
 
 	s.srv = srv
-	s.sheetId = os.Getenv("SHEET_ID")
+	s.sheetId = sheetId
 	return nil
 }
 
@@ -49,9 +48,20 @@ func (s Service) Append(r string, data [][]interface{}) (int, error) {
 	return res.HTTPStatusCode, nil
 }
 
-// Default error check with fatal if err != nil
-func checkErrorAndPanic(err error) {
+// ReadRange read data from selected range and return it
+// r string: Range to search in !A1 format
+// Return [][]interface{}: retrieved data
+func (s Service) ReadRange(r string) ([][]interface{}, error) {
+	res, err := s.srv.Spreadsheets.Values.Get(s.sheetId, r).Do()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+	return res.Values, nil
 }
+
+// Read day data from GSheet based on parameters
+// c DayCoord: Coordinates of weeks days
+// w string: Week number
+// d string: Day name
+// Return 2D Array of string with requested day data
+// TODO: implement methods
