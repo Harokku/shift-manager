@@ -47,9 +47,16 @@ func (c *DayCoord) New() error {
 	return nil
 }
 
-// Implement method to update struct from array
+// Update day coordinates from passed 2d array of string
 func (c *DayCoord) Update(coord [][]string) error {
-	fmt.Printf("%v\n", coord)
+	// Cycle through coord param populating struct
+	c.monday = fmt.Sprintf("%s!%s:%s", c.sheetName, coord[0][0], coord[0][1])
+	c.tuesday = fmt.Sprintf("%s!%s:%s", c.sheetName, coord[1][0], coord[1][1])
+	c.wednesday = fmt.Sprintf("%s!%s:%s", c.sheetName, coord[2][0], coord[2][1])
+	c.thursday = fmt.Sprintf("%s!%s:%s", c.sheetName, coord[3][0], coord[3][1])
+	c.friday = fmt.Sprintf("%s!%s:%s", c.sheetName, coord[4][0], coord[4][1])
+	c.saturday = fmt.Sprintf("%s!%s:%s", c.sheetName, coord[5][0], coord[5][1])
+
 	return nil
 }
 

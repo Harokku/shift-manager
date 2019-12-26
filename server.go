@@ -11,7 +11,6 @@ import (
 	"os"
 	"shift-manager/api"
 	"shift-manager/db"
-	"shift-manager/gsuite"
 )
 
 func main() {
@@ -91,12 +90,6 @@ func main() {
 	// -----------------------
 	// Server Start
 	// -----------------------
-
-	dc := gsuite.DayCoord{}
-	err = dc.New()
-	if err != nil {
-		panic(err)
-	}
 
 	e.Logger.Fatal(e.Start(":" + port))
 }
