@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"net/http"
 	"os"
@@ -42,6 +43,12 @@ func PostShift() echo.HandlerFunc {
 		if err := context.Bind(&s); err != nil {
 			return context.String(http.StatusBadRequest, fmt.Sprintf("Error binding request body: %v\n", err))
 		}
+
+		// Read operator name from auth token and set struct Name field
+		user := context.Get("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		operatorName := claims["opname"].(string)
+		s.Name = operatorName
 
 		err = s.setDefaults()
 		if err != nil {
