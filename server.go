@@ -11,6 +11,9 @@ import (
 	"os"
 	"shift-manager/api"
 	"shift-manager/db"
+	"shift-manager/gsuite"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -90,6 +93,24 @@ func main() {
 	// -----------------------
 	// Server Start
 	// -----------------------
+
+	// FIXME: DEbug only, Remove from prod code
+	testTime := time.Now()
+	testCoord := gsuite.DayCoord{}
+	testCoord.New()
+	srv := gsuite.Service{}
+	srv.New(os.Getenv("SHIFT_ID"))
+	res, err := srv.ReadDay(testCoord, testTime)
+	fmt.Println(res)
+
+	roles, err := srv.GetOperatorRoles(res, "crenNa")
+	fmt.Printf("Roles: %v\n", roles)
+	splitroles := strings.Split(roles, "|")
+	fmt.Println(splitroles)
+	_, err = srv.GetOperatorRoles(res, "Paiacio")
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	e.Logger.Fatal(e.Start(":" + port))
 }
