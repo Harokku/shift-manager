@@ -120,6 +120,24 @@ func (s Service) ReadDay(c DayCoord, t time.Time) ([][]interface{}, error) {
 // n string: Operator name to search for
 // Return string: Pipe separated values representing operator's assigned roles
 func (s Service) GetOperatorRoles(d [][]interface{}, n string) (string, error) {
+	cellRange, err := s.GetCellRange(d, n)
+	if err != nil {
+		return "", nil
+	}
+
+	// Fetch roles string from gsheet and return if found
+	query := fmt.Sprintf("%s%s", strings.SplitAfter(os.Getenv("ROLES_RANGE"), "!")[0], cellRange)
+	res, err := s.ReadCell(query)
+	if err != nil {
+		return "", err
+	}
+
+	return res, nil
+}
+
+// GetCellRange search for name (n) in 2D array (d) and return a string representing gsheets cell coordinate
+// Cell coordinate are supposed starting from A1 cell, so do the necessary math if offset
+func (s Service) GetCellRange(d [][]interface{}, n string) (string, error) {
 	// Convert operator name to lowercase for comparison
 	nLowcase := strings.ToLower(n)
 	// GSheet coordinate of assigned day roles
@@ -147,12 +165,5 @@ func (s Service) GetOperatorRoles(d [][]interface{}, n string) (string, error) {
 		return "", errors.New("no roles found for passed operator")
 	}
 
-	// Fetch roles string from gsheet and return if found
-	query := fmt.Sprintf("%s%s", strings.SplitAfter(os.Getenv("ROLES_RANGE"), "!")[0], rolesCell)
-	res, err := s.ReadCell(query)
-	if err != nil {
-		return "", err
-	}
-
-	return res, nil
+	return rolesCell, nil
 }

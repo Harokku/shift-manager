@@ -11,9 +11,6 @@ import (
 	"os"
 	"shift-manager/api"
 	"shift-manager/db"
-	"shift-manager/gsuite"
-	"strings"
-	"time"
 )
 
 func main() {
@@ -79,9 +76,10 @@ func main() {
 	})
 	users.GET("/userdetails", api.GetUserDetailsFromClaims(&dbService))
 
-	// Shift data
-	shiftData := e.Group("/shiftdata")
+	// Shift data (req auth)
+	shiftData := e.Group("/shiftdata", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	shiftData.GET("/all", api.GetAllFormData(&dbService))
+	shiftData.GET("/today", api.GetLoggedInOperatorShift())
 
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
@@ -93,24 +91,6 @@ func main() {
 	// -----------------------
 	// Server Start
 	// -----------------------
-
-	// FIXME: DEbug only, Remove from prod code
-	testTime := time.Now()
-	testCoord := gsuite.DayCoord{}
-	testCoord.New()
-	srv := gsuite.Service{}
-	srv.New(os.Getenv("SHIFT_ID"))
-	res, err := srv.ReadDay(testCoord, testTime)
-	fmt.Println(res)
-
-	roles, err := srv.GetOperatorRoles(res, "crenNa")
-	fmt.Printf("Roles: %v\n", roles)
-	splitroles := strings.Split(roles, "|")
-	fmt.Println(splitroles)
-	_, err = srv.GetOperatorRoles(res, "Paiacio")
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	e.Logger.Fatal(e.Start(":" + port))
 }
