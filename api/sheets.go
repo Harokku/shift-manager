@@ -2,8 +2,10 @@ package api
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"net/http"
+	"os"
 	"shift-manager/gsuite"
 	"time"
 )
@@ -28,7 +30,7 @@ type shift struct {
 func PostShift() echo.HandlerFunc {
 	return func(context echo.Context) error {
 		sheetService := gsuite.Service{}
-		err := sheetService.New()
+		err := sheetService.New(os.Getenv("SHEET_ID"))
 		if err != nil {
 			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error creating gSheet service: %v\n", err))
 		}
@@ -41,6 +43,12 @@ func PostShift() echo.HandlerFunc {
 		if err := context.Bind(&s); err != nil {
 			return context.String(http.StatusBadRequest, fmt.Sprintf("Error binding request body: %v\n", err))
 		}
+
+		// Read operator name from auth token and set struct Name field
+		user := context.Get("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		operatorName := claims["opname"].(string)
+		s.Name = operatorName
 
 		err = s.setDefaults()
 		if err != nil {
