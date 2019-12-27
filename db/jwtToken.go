@@ -30,6 +30,13 @@ func CreateToken(username, password string, s Service) (string, error) {
 	claims["role"] = user.Roles
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
+	// Retrieve user's detail and populate claims
+	err = user.GetUserDetail(username)
+	if err != nil {
+		return "", echo.ErrBadRequest
+	}
+	claims["opname"] = fmt.Sprintf("%s %s", user.Surname, user.Name)
+
 	t, err := token.SignedString([]byte(os.Getenv("SECRET")))
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Error signing token: %v\n", err))

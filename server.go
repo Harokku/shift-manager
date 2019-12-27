@@ -76,9 +76,10 @@ func main() {
 	})
 	users.GET("/userdetails", api.GetUserDetailsFromClaims(&dbService))
 
-	// Shift data
-	shiftData := e.Group("/shiftdata")
+	// Shift data (req auth)
+	shiftData := e.Group("/shiftdata", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	shiftData.GET("/all", api.GetAllFormData(&dbService))
+	shiftData.GET("/today", api.GetLoggedInOperatorShift())
 
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
