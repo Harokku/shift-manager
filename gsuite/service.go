@@ -122,7 +122,7 @@ func (s Service) ReadDay(c DayCoord, t time.Time) ([][]interface{}, error) {
 func (s Service) GetOperatorRoles(d [][]interface{}, n string) (string, error) {
 	cellRange, err := s.GetCellRange(d, n)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	// Fetch roles string from gsheet and return if found
