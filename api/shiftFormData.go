@@ -111,7 +111,7 @@ func GetLoggedInOperatorShift() echo.HandlerFunc {
 		// Retrieve today roles
 		todayRoles, err := srv.GetOperatorRoles(todayShift, name)
 		if err != nil {
-			fmt.Printf("cannot retrieve requested roles, operator not found: %v", err)
+			fmt.Printf("cannot retrieve requested roles, operator not found: %v\n", err)
 			return context.String(http.StatusNotFound, "Cannot retrieve requested roles, operator not found")
 		}
 

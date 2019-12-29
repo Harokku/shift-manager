@@ -71,11 +71,11 @@ func (s Service) ReadCell(r string) (string, error) {
 		return "", err
 	}
 
-	cell := res.Values[0][0]
+	cell := res.Values[0][0].(string)
 	if cell == "" {
 		return "", errors.New("no cell found")
 	}
-	return cell.(string), nil
+	return cell, nil
 }
 
 // Read day data from GSheet based on parameters
