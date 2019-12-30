@@ -80,6 +80,7 @@ func main() {
 	shiftData := e.Group("/shiftdata", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	shiftData.GET("/all", api.GetAllFormData(&dbService))
 	shiftData.GET("/today", api.GetLoggedInOperatorShift())
+	shiftData.GET("/date/:date", api.GetLoggedInOperatorShiftByDate())
 
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
