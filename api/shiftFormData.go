@@ -126,3 +126,62 @@ func GetLoggedInOperatorShift() echo.HandlerFunc {
 		return context.JSON(http.StatusOK, response)
 	}
 }
+
+func GetLoggedInOperatorShiftByDate() echo.HandlerFunc {
+	return func(context echo.Context) error {
+		// Read operator name fom JWT
+		user := context.Get("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		opFullName := claims["opname"]
+
+		// Extract operator surname from claim
+		name := strings.Split(opFullName.(string), " ")[0]
+
+		// Response struct to populate and return
+		var response = struct {
+			Locations db.Location     `json:"location"`
+			Shifts    db.Shift        `json:"shift"`
+			Vehicles  db.Vehicle      `json:"vehicle"`
+			Roles     db.OperatorRole `json:"role"`
+		}{}
+
+		// Roles retrieval
+		date, err := time.Parse("20060102", context.Param("date"))
+		if err != nil {
+			fmt.Printf("Malformed date param passed: %v\n", err)
+			return context.String(http.StatusBadRequest, "Malformed date param passed")
+		}
+
+		// Retrieve day coordinates
+		dayCoord := gsuite.DayCoord{}
+		dayCoord.New()
+
+		// Gsheet service
+		srv := gsuite.Service{}
+		srv.New(os.Getenv("SHIFT_ID"))
+
+		// Retrieve today shift
+		todayShift, err := srv.ReadDay(dayCoord, date)
+		if err != nil {
+			fmt.Printf("Cannot retrieve requested shift, no shift found: %v\n", err)
+			return context.String(http.StatusNotFound, "Cannot retrieve requested shift, no shift found")
+		}
+
+		// Retrieve today roles
+		todayRoles, err := srv.GetOperatorRoles(todayShift, name)
+		if err != nil {
+			fmt.Printf("cannot retrieve requested roles, operator not found: %v\n", err)
+			return context.String(http.StatusNotFound, "Cannot retrieve requested roles, operator not found")
+		}
+
+		// Populate roles struct
+		splitRoles := strings.Split(todayRoles, "|")
+		response.Locations.Name = splitRoles[0]
+		response.Shifts.Name = splitRoles[1]
+		response.Vehicles.Name = splitRoles[2]
+		response.Roles.Name = splitRoles[3]
+
+		// Return today shift
+		return context.JSON(http.StatusOK, response)
+	}
+}
