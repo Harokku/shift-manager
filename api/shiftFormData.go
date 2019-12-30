@@ -147,6 +147,10 @@ func GetLoggedInOperatorShiftByDate() echo.HandlerFunc {
 
 		// Roles retrieval
 		date, err := time.Parse("20060102", context.Param("date"))
+		if err != nil {
+			fmt.Printf("Malformed date param passed: %v\n", err)
+			return context.String(http.StatusBadRequest, "Malformed date param passed")
+		}
 
 		// Retrieve day coordinates
 		dayCoord := gsuite.DayCoord{}
