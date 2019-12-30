@@ -23,11 +23,20 @@ func GetPostedShifts() echo.HandlerFunc {
 			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error creating gsuite service: %v\n", err))
 		}
 
+		// Get all operator's posted shifts
 		res, err := s.GetOperatorPostedShifts(n)
 		if err != nil {
 			fmt.Printf("No past shifts found: %v\n", err)
 			return context.String(http.StatusNotFound, fmt.Sprintf("No past shifts found: %v", err))
 		}
-		return context.JSON(http.StatusOK, res)
+
+		// Return last 31 posted shifts
+		var lastMonth []interface{}
+		if len(res) > 31 {
+			lastMonth = res[len(res)-31:]
+		} else {
+			lastMonth = res
+		}
+		return context.JSON(http.StatusOK, lastMonth)
 	}
 }
