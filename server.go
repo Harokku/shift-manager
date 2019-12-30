@@ -88,6 +88,7 @@ func main() {
 		return context.String(http.StatusNoContent, "Google Sheets route root")
 	})
 	gSheet.POST("/shift", api.PostShift())
+	gSheet.GET("/pastshifts", api.GetPostedShifts())
 
 	// -----------------------
 	// Server Start
