@@ -167,3 +167,31 @@ func (s Service) GetCellRange(d [][]interface{}, n string) (string, error) {
 
 	return rolesCell, nil
 }
+
+// GetOperatorPostedShifts retrieve all posted shift based on passed in operator name (n)
+//
+// n string: Operator name to retrieve posted shifts
+//
+// return []interface{}: 1D array containing all posted shifts date.
+func (s Service) GetOperatorPostedShifts(n string) ([]interface{}, error) {
+	// Get all posted shift from gsheet
+	query := "Cartellini!B4:C"
+	res, err := s.ReadRange(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []interface{}
+	// Filter data returning only matching operator
+	for _, i := range res {
+		if i[0] == n {
+			response = append(response, i[1])
+		}
+	}
+
+	// Check if no shift is found and return an error
+	if response == nil {
+		return nil, errors.New("no shift found for passed operator")
+	}
+	return response, nil
+}
