@@ -1,12 +1,14 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"net/http"
 	"os"
 	"shift-manager/gsuite"
+	"strings"
 	"time"
 )
 
@@ -51,9 +53,9 @@ func PostShift() echo.HandlerFunc {
 		operatorName := claims["opname"].(string)
 		s.Name = operatorName
 
-		err = s.setDefaults()
+		err = s.setDefaults(strings.Split(operatorName, " ")[0])
 		if err != nil {
-			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error checking for defaults: %v\n", err))
+			fmt.Printf("Cannot retrieve assigned shift data, falling back to declared: %v\n", err)
 		}
 
 		// d is data casted and ready to be appended to google sheet
@@ -68,12 +70,40 @@ func PostShift() echo.HandlerFunc {
 }
 
 // setDefaults retrieve default shift from gsheet and set default value
-func (s *shift) setDefaults() error {
+func (s *shift) setDefaults(name string) error {
 	if s.ManualCompilation {
 		return nil
 	}
-	// TODO: Implement default shift lookup and value set
-	fmt.Printf("Reading shift data and setting shift...\n")
+
+	// Retrieve day coordinates
+	dayCoord := gsuite.DayCoord{}
+	dayCoord.New()
+
+	// Gsheet service
+	srv := gsuite.Service{}
+	srv.New(os.Getenv("SHIFT_ID"))
+
+	// Retrive today shift
+	todayShift, err := srv.ReadDay(dayCoord, s.Date)
+	if err != nil {
+		fmt.Printf("Cannot retrieve requested shift %v\n", err)
+		return errors.New("cannot retrieve requested shift")
+	}
+
+	// Retrieve today role
+	todayRoles, err := srv.GetOperatorRoles(todayShift, name)
+	if err != nil {
+		fmt.Printf("Cannot retrieve requested shoft roles, operator not found: %v\n", err)
+		return errors.New("cannot retrieve requested shoft roles, operator not found")
+	}
+
+	// Populate roles
+	splitRoles := strings.Split(todayRoles, "|")
+	s.Location = splitRoles[0]
+	s.Shift = splitRoles[1]
+	s.Vehicle = splitRoles[2]
+	s.Role = splitRoles[3]
+
 	return nil
 }
 
