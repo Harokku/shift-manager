@@ -69,6 +69,10 @@ func main() {
 	})
 	admin.POST("/passwordreset", api.ResetPwd(&dbService))
 
+	// Manager group (req auth and manager role)
+	manager := e.Group("/manager", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	manager.PUT("/dochange", api.PutChange())
+
 	// Users group (req auth)
 	users := e.Group("/users", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	users.GET("", func(context echo.Context) error {

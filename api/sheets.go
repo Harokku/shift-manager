@@ -42,7 +42,7 @@ func PostShift() echo.HandlerFunc {
 		// Add post timestamp
 		s.Timestamp = time.Now()
 
-		// Bind request boy to shift struct
+		// Bind request body to shift struct
 		if err := context.Bind(&s); err != nil {
 			return context.String(http.StatusBadRequest, fmt.Sprintf("Error binding request body: %v\n", err))
 		}
