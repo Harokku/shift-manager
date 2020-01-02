@@ -48,6 +48,7 @@ func GetUserDetailsFromClaims(s *db.Service) echo.HandlerFunc {
 	}
 }
 
+// TODO: Refactor admin check using middleware (checkIfRole)
 func ResetPwd(s *db.Service) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		// Read user from JWT and extract claims

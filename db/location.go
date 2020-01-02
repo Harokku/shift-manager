@@ -35,7 +35,6 @@ func (l *Location) Get(name string) error {
 func (l *Location) GetAll(dest *[]Location) error {
 	sqlStatement := `SELECT id, name, geo[0],geo[1], address, "order" FROM locations`
 	rows, err := l.service.Db.Query(sqlStatement)
-	// TODO: define a better error handler
 	if err != nil {
 		return errors.New(fmt.Sprintf("error retrieving locations: %v\n", err))
 	}

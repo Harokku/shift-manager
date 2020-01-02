@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	_ "github.com/lib/pq"
@@ -12,6 +13,42 @@ import (
 	"shift-manager/api"
 	"shift-manager/db"
 )
+
+// -----------------------
+// Custom middleware
+// -----------------------
+
+// checkIfRole check if passed JWT contain (r) role and forward or stop the request
+//
+// Don't check if JWT is valid or present, but assume it's true,
+// chain with echo's middleware.JWT to avoid problems
+func checkIfRole(r string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// Read user from JWT and extract claims
+			user := c.Get("user").(*jwt.Token)
+			claims := user.Claims.(jwt.MapClaims)
+			roles := claims["role"].([]interface{})
+
+			// Check if roles contain (r)
+			for _, role := range roles {
+				// if true, call next middleware
+				if role == r {
+					return next(c)
+				}
+				// if false, drop request and return not authorized error
+				return echo.ErrUnauthorized
+			}
+
+			// if here, something went wrong, return server error
+			return echo.ErrInternalServerError
+		}
+	}
+}
+
+// -----------------------
+// Main
+// -----------------------
 
 func main() {
 	// Heroku port from env variable
@@ -62,8 +99,9 @@ func main() {
 	// Login route
 	e.POST("/login", api.Login(&dbService))
 
-	// Admin group (req auth)
+	// Admin group (req auth and admin role)
 	admin := e.Group("/admin", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	admin.Use(checkIfRole("admin"))
 	admin.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Admin route root")
 	})
@@ -71,6 +109,7 @@ func main() {
 
 	// Manager group (req auth and manager role)
 	manager := e.Group("/manager", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	e.Use(checkIfRole("manager"))
 	manager.PUT("/dochange", api.PutChange())
 
 	// Users group (req auth)
