@@ -131,7 +131,7 @@ func (s *ShiftsToSwitch) SwitchShifts() error {
 	// Call method to actually update gsheet
 	err = s.service.BatchUpdateCells(data)
 	if err != nil {
-		return errors.New(fmt.Sprintf("error swirching shifts: %V\n", err))
+		return errors.New(fmt.Sprintf("error swirching shifts: %v\n", err))
 	}
 
 	return nil
