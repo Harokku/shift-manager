@@ -109,7 +109,7 @@ func main() {
 
 	// Manager group (req auth and manager role)
 	manager := e.Group("/manager", middleware.JWT([]byte(os.Getenv("SECRET"))))
-	e.Use(checkIfRole("manager"))
+	manager.Use(checkIfRole("manager"))
 	manager.PUT("/dochange", api.PutChange())
 
 	// Users group (req auth)
@@ -124,6 +124,10 @@ func main() {
 	shiftData.GET("/all", api.GetAllFormData(&dbService))
 	shiftData.GET("/today", api.GetLoggedInOperatorShift())
 	shiftData.GET("/date/:date", api.GetLoggedInOperatorShiftByDate())
+
+	// Change request (req auth)
+	changeRequest := e.Group("/changes", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	changeRequest.POST("/request", api.RequestChange(&dbService))
 
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))

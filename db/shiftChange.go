@@ -94,7 +94,12 @@ func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
 
 // NewRequest create a new shift request, setting initial status
 //
-// Populate requested field before invoke
+// Populate required field before invoke:
+// ApplicantName, ApplicantDate, WithName, WithDate
+//
+// Applicant is the operator who ask for change
+//
+// With is the operator to change with
 func (s ShiftChange) NewRequest() error {
 	sqlStatement := `
 					INSERT INTO shift_change (applicant_name, applicant_date, with_name, with_date)
@@ -104,5 +109,29 @@ func (s ShiftChange) NewRequest() error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("error creating new shift change request: %v\n", err))
 	}
+	return nil
+}
+
+// ChangeStatus update change request status
+//
+// set required fields in struct before invoking, non required fields will be discarded:
+// ID, Manager, Status
+//
+// If successful set outcome to true (standing shift request has been evaded and require no further attention) and response timestamp
+func (s *ShiftChange) ChangeStatus() error {
+	timestamp := time.Now()
+	sqlStatement := `
+					UPDATE shift_change
+					SET manager_name=$2, 
+					    outcome=true,
+					    status=$3,
+					    response_timestamp=$4
+					WHERE id=$1
+`
+	_, err := s.service.Db.Exec(sqlStatement, s.Id, s.Manager, s.Status, timestamp)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error updating status: %v\n", err))
+	}
+	s.Outcome = true
 	return nil
 }

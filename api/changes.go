@@ -2,9 +2,11 @@ package api
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"net/http"
 	"os"
+	"shift-manager/db"
 	"shift-manager/gsuite"
 	"time"
 )
@@ -16,6 +18,15 @@ type change struct {
 	SecondName string    `json:"second_name"`
 }
 
+// PutChange actually modify gsheet shift table switching passed operators
+//
+// Request body:
+// {
+//		first_date: Requester date
+//		first_name: Requester operator name
+//		second_date: Requested date
+//		second_name: Requested operator name
+// }
 func PutChange() echo.HandlerFunc {
 	return func(context echo.Context) error {
 		var err error
@@ -53,6 +64,46 @@ func PutChange() echo.HandlerFunc {
 			fmt.Printf("Error switching shifts: %v,\n", err)
 			return context.String(http.StatusBadRequest, fmt.Sprintf("Error switching shifts: %v,\n", err))
 		}
-		return context.String(http.StatusNoContent, "Shift correctly modified")
+		return context.String(http.StatusOK, "Shift correctly modified")
+	}
+}
+
+// RequestChange create a new shift change request to DB. Will be posted to gsheet after is been managed
+//
+// Request body:
+// {
+//		applicant_date: Requester date
+//		with_date: Requested date
+//		with_name: Requested operator name
+// }
+func RequestChange(s *db.Service) echo.HandlerFunc {
+	return func(context echo.Context) error {
+		var (
+			err         error
+			requester   db.User        // Requester user data (username and ID)
+			shiftChange db.ShiftChange // Shift change service
+		)
+
+		// Read user from JWT and extract claims
+		user := context.Get("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		username := claims["username"].(string)
+
+		// Create service and get logged in user's DB ID
+		requester.New(*s)
+		err = requester.GetUser(username)
+
+		// Populate shiftChange with request body data
+		shiftChange.New(*s)
+		if err = context.Bind(&shiftChange); err != nil {
+			return context.String(http.StatusBadRequest, fmt.Sprintf("error binding request body: %v\n", err))
+		}
+		shiftChange.ApplicantName = requester.Id
+		err = shiftChange.NewRequest()
+		if err != nil {
+			return context.String(http.StatusBadRequest, fmt.Sprintf("error creating shift request: %v\n", err))
+		}
+
+		return context.String(http.StatusOK, "Shift change request correctly submitted")
 	}
 }

@@ -24,9 +24,9 @@ func (u *User) New(s Service) {
 }
 
 func (u *User) GetUser(username string) error {
-	sqlStatement := `SELECT username, password,roles FROM users WHERE username=$1`
+	sqlStatement := `SELECT id, username, password,roles FROM users WHERE username=$1`
 	row := u.service.Db.QueryRow(sqlStatement, username)
-	switch err := row.Scan(&u.Username, &u.Password, pq.Array(&u.Roles)); err {
+	switch err := row.Scan(&u.Id, &u.Username, &u.Password, pq.Array(&u.Roles)); err {
 	case sql.ErrNoRows:
 		return errors.New("no row where retrieved")
 	case nil:
