@@ -10,11 +10,11 @@ import (
 type ShiftChange struct {
 	service           Service
 	Id                string    `json:"id"`
-	Manager           string    `json:"manager"`
+	Manager           string    `json:"manager,omitempty"`
 	Outcome           bool      `json:"outcome"`
 	Status            string    `json:"status"`
 	RequestTimestamp  time.Time `json:"request_timestamp"`
-	ResponseTimestamp time.Time `json:"response_timestamp"`
+	ResponseTimestamp time.Time `json:"response_timestamp,omitempty"`
 	ApplicantName     string    `json:"applicant_name"`
 	ApplicantDate     time.Time `json:"applicant_date"`
 	WithName          string    `json:"with_name"`
@@ -53,16 +53,17 @@ func (s *ShiftChange) GetById(id string) error {
 	}
 }
 
-// GetAdd retrieve all shift changes from db, ordered from newest to older
+// GetAll retrieve all shift changes from db, ordered from newest to older
 //
 // dest []ShiftChange: You must pass an array pointer to ShiftChange who will be populated with retrieved content
 func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
+	nullTime := time.Time{}
 	sqlStatement := `SELECT id,
-						   manager_name,
+						   COALESCE(CAST(manager_name as varchar), '') as manager_name,
 						   outcome,
 						   status,
 						   request_timestamp,
-						   response_timestamp,
+						   COALESCE(response_timestamp, $1) as response_timestamp,
 						   applicant_name,
 						   applicant_date,
 						   with_name,
@@ -70,7 +71,7 @@ func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
 					FROM shift_change
 					ORDER BY request_timestamp DESC`
 
-	rows, err := s.service.Db.Query(sqlStatement)
+	rows, err := s.service.Db.Query(sqlStatement, nullTime)
 	if err != nil {
 		return errors.New(fmt.Sprintf("error retrieving shifts change: %v\n", err))
 	}
@@ -89,6 +90,49 @@ func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
 		return errors.New(fmt.Sprintf("error appending rows to result: %v\n", err))
 	}
 
+	return nil
+}
+
+// GetAllByApplicant retrieve all shift changes requests from DB based on applicant UUID
+//
+// dest []ShiftChange: You must pass an array pointer to ShiftChange who will be populated with retrieved content
+//
+// set applicant_name UUID before call
+func (s *ShiftChange) GetAllByApplicant(dest *[]ShiftChange) error {
+	nulltime := time.Time{}
+	sqlStatement := `SELECT id,
+						   COALESCE(CAST(manager_name as varchar), '') as manager_name,
+						   outcome,
+						   status,
+						   request_timestamp,
+						   COALESCE(response_timestamp, $1) as response_timestamp,
+						   applicant_name,
+						   applicant_date,
+						   with_name,
+						   with_date
+					FROM shift_change
+					WHERE applicant_name = $2
+					ORDER BY request_timestamp DESC
+`
+
+	rows, err := s.service.Db.Query(sqlStatement, nulltime, s.ApplicantName)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error retrieving shift changes: %v\n", err))
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var shiftChange ShiftChange
+		err = rows.Scan(&shiftChange.Id, &shiftChange.Manager, &shiftChange.Outcome, &shiftChange.Status, &shiftChange.RequestTimestamp, &shiftChange.ResponseTimestamp, &shiftChange.ApplicantName, &shiftChange.ApplicantDate, &shiftChange.WithName, &shiftChange.WithDate)
+		if err != nil {
+			return errors.New(fmt.Sprintf("error scanning row: %v\n", err))
+		}
+		*dest = append(*dest, shiftChange)
+	}
+	err = rows.Err()
+	if err != nil {
+		return errors.New(fmt.Sprintf("error appending rows to result: %v\n", err))
+	}
 	return nil
 }
 

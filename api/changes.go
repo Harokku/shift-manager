@@ -107,3 +107,22 @@ func RequestChange(s *db.Service) echo.HandlerFunc {
 		return context.String(http.StatusOK, "Shift change request correctly submitted")
 	}
 }
+
+// GetAllChanges return all changes
+func GetAllChanges(s *db.Service) echo.HandlerFunc {
+	return func(context echo.Context) error {
+		var (
+			err          error
+			shiftChange  db.ShiftChange
+			shiftChanges []db.ShiftChange
+		)
+
+		shiftChange.New(*s)
+		err = shiftChange.GetAll(&shiftChanges)
+		if err != nil {
+			return context.String(http.StatusNotFound, fmt.Sprintf("no shift change found: %v\n", err))
+		}
+
+		return context.JSON(http.StatusOK, shiftChanges)
+	}
+}
