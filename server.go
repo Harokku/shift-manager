@@ -39,9 +39,6 @@ func checkIfRole(r string) echo.MiddlewareFunc {
 			}
 			// if role is not found, drop request and return not authorized error
 			return echo.ErrUnauthorized
-
-			// if here, something went wrong, return server error
-			//return echo.ErrInternalServerError
 		}
 	}
 }
@@ -111,6 +108,7 @@ func main() {
 	manager := e.Group("/manager", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	manager.Use(checkIfRole("manager"))
 	manager.PUT("/dochange", api.PutChange())
+	manager.POST("/managechange", api.ManageChangeRequest(&dbService))
 
 	// Users group (req auth)
 	users := e.Group("/users", middleware.JWT([]byte(os.Getenv("SECRET"))))
@@ -129,6 +127,7 @@ func main() {
 	changeRequest := e.Group("/changes", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	changeRequest.POST("/request", api.RequestChange(&dbService))
 	changeRequest.GET("/all", api.GetAllChanges(&dbService), checkIfRole("manager"))
+	changeRequest.GET("/user", api.GetAllChangesForUser(&dbService))
 
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))

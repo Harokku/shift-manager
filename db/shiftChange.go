@@ -29,12 +29,13 @@ func (s *ShiftChange) New(service Service) {
 //
 // s ShiftChange: struct populated if successfully retrieved shift change
 func (s *ShiftChange) GetById(id string) error {
+	nullTime := time.Time{}
 	sqlStatement := `SELECT id,
-						   manager_name,
+						   COALESCE(CAST(manager_name as varchar),'') as manager_name,
 						   outcome,
 						   status,
 						   request_timestamp,
-						   response_timestamp,
+						   COALESCE(response_timestamp, $2) as response_timestamp,
 						   applicant_name,
 						   applicant_date,
 						   with_name,
@@ -42,7 +43,7 @@ func (s *ShiftChange) GetById(id string) error {
 					FROM shift_change
 					WHERE id = $1`
 
-	row := s.service.Db.QueryRow(sqlStatement, id)
+	row := s.service.Db.QueryRow(sqlStatement, id, nullTime)
 	switch err := row.Scan(&s.Id, &s.Manager, &s.Outcome, &s.Status, &s.RequestTimestamp, &s.ResponseTimestamp, &s.ApplicantName, &s.ApplicantDate, &s.WithName, &s.WithDate); err {
 	case sql.ErrNoRows:
 		return errors.New("no row where retrieved")
