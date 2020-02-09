@@ -101,17 +101,19 @@ func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
 // set applicant_name UUID before call
 func (s *ShiftChange) GetAllByApplicant(dest *[]ShiftChange) error {
 	nulltime := time.Time{}
-	sqlStatement := `SELECT id,
-						   COALESCE(CAST(manager_name as varchar), '') as manager_name,
-						   outcome,
-						   status,
-						   request_timestamp,
-						   COALESCE(response_timestamp, $1) as response_timestamp,
-						   applicant_name,
-						   applicant_date,
-						   with_name,
-						   with_date
-					FROM shift_change
+	sqlStatement := `SELECT s.id,
+						   COALESCE(CAST(s.manager_name as varchar), '') as manager_name,
+						   s.outcome,
+						   s.status,
+						   s.request_timestamp,
+						   COALESCE(s.response_timestamp, $1) as response_timestamp,
+						   a.surname as applicant_name,
+						   s.applicant_date,
+						   w.surname as with_name,
+						   s.with_date
+					FROM shift_change s
+						INNER JOIN operators a ON s.applicant_name = a."user"
+         				INNER JOIN operators w ON s.with_name = w."user"
 					WHERE applicant_name = $2
 					ORDER BY request_timestamp DESC
 `
