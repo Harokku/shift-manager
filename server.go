@@ -115,6 +115,7 @@ func main() {
 	users.GET("", func(context echo.Context) error {
 		return context.String(http.StatusNoContent, "Users management route root")
 	})
+	users.GET("/all", api.GetAllUserNames(&dbService))
 	users.GET("/userdetails", api.GetUserDetailsFromClaims(&dbService))
 
 	// Shift data (req auth)
