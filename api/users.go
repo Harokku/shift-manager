@@ -29,6 +29,24 @@ func Login(s *db.Service) echo.HandlerFunc {
 	}
 }
 
+func GetAllUserNames(s *db.Service) echo.HandlerFunc {
+	return func(context echo.Context) error {
+		var (
+			u     db.User
+			users []db.User
+			err   error
+		)
+
+		u.New(*s)
+
+		err = u.GetAllUser(&users)
+		if err != nil {
+			return context.String(http.StatusNotFound, fmt.Sprintf("Error retrieving users: %v\n", err))
+		}
+		return context.JSON(http.StatusOK, users)
+	}
+}
+
 func GetUserDetailsFromClaims(s *db.Service) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		// Read user from JWT and extract username claim
@@ -48,6 +66,7 @@ func GetUserDetailsFromClaims(s *db.Service) echo.HandlerFunc {
 	}
 }
 
+// TODO: Refactor admin check using middleware (checkIfRole)
 func ResetPwd(s *db.Service) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		// Read user from JWT and extract claims

@@ -18,6 +18,11 @@ type Service struct {
 	sheetId string
 }
 
+type CellToUpdate struct {
+	Range string //A1 range notation
+	Value string //Content to put in the cell
+}
+
 // Represent Google API service with auth and sheetId ID read from env
 // GOOGLE_API is the auth secret
 // SHEETS_ID is the sheetId to read from
@@ -76,6 +81,50 @@ func (s Service) ReadCell(r string) (string, error) {
 		return "", errors.New("no cell found")
 	}
 	return cell, nil
+}
+
+// UpdateCell update passed (r) cell in A1 notation with passed (v) string
+func (s Service) UpdateCell(r string, v string) error {
+	// Prepare sheets.ValueRange
+	data := [][]interface{}{
+		{strings.ToUpper(v)},
+	}
+	var values = sheets.ValueRange{
+		Values: data,
+	}
+
+	_, err := s.srv.Spreadsheets.Values.Update(s.sheetId, r, &values).ValueInputOption("USER_ENTERED").Do()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// BatchUpdateCells update passed array of cells
+func (s Service) BatchUpdateCells(d []CellToUpdate) error {
+	// Prepare sheets.ValueRange array
+	var data []*sheets.ValueRange
+	// Cycle through d and populate request array
+	for _, cellRef := range d {
+		value := &sheets.ValueRange{
+			Range:  cellRef.Range,
+			Values: [][]interface{}{{strings.ToUpper(cellRef.Value)}},
+		}
+		data = append(data, value)
+	}
+
+	// Prepare batch request
+	rb := &sheets.BatchUpdateValuesRequest{
+		ValueInputOption: "USER_ENTERED",
+		Data:             data,
+	}
+
+	_, err := s.srv.Spreadsheets.Values.BatchUpdate(s.sheetId, rb).Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Read day data from GSheet based on parameters
