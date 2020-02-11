@@ -59,17 +59,19 @@ func (s *ShiftChange) GetById(id string) error {
 // dest []ShiftChange: You must pass an array pointer to ShiftChange who will be populated with retrieved content
 func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
 	nullTime := time.Time{}
-	sqlStatement := `SELECT id,
-						   COALESCE(CAST(manager_name as varchar), '') as manager_name,
-						   outcome,
-						   status,
-						   request_timestamp,
-						   COALESCE(response_timestamp, $1) as response_timestamp,
-						   applicant_name,
-						   applicant_date,
-						   with_name,
-						   with_date
-					FROM shift_change
+	sqlStatement := `SELECT s.id,
+						   COALESCE(CAST(s.manager_name as varchar), '') as manager_name,
+						   s.outcome,
+						   s.status,
+						   s.request_timestamp,
+						   COALESCE(s.response_timestamp, $1) as response_timestamp,
+						   CONCAT(a.surname, ' ', a.name)                as applicant_surname,
+						   s.applicant_date,
+						   CONCAT(w.surname, ' ', w.name)                 as with_surname,
+						   s.with_date
+					FROM shift_change s
+						INNER JOIN operators a on s.applicant_name = a."user"
+						INNER JOIN operators w on s.with_name = w."user"
 					ORDER BY request_timestamp DESC`
 
 	rows, err := s.service.Db.Query(sqlStatement, nullTime)
