@@ -225,11 +225,13 @@ func ManageChangeRequest(s *db.Service) echo.HandlerFunc {
 			return context.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving requester name: %v\n", err))
 		}
 
-		// call service to actually modify gsheet
-		err = sc.SwitchShifts()
-		if err != nil {
-			fmt.Printf("Error switching shifts: %v\n", err)
-			return context.String(http.StatusBadRequest, fmt.Sprintf("Error switching shifts: %v\n", err))
+		// call service to actually modify gsheet only if status is 'accepted'
+		if statusToChange.Status == "accepted" {
+			err = sc.SwitchShifts()
+			if err != nil {
+				fmt.Printf("Error switching shifts: %v\n", err)
+				return context.String(http.StatusBadRequest, fmt.Sprintf("Error switching shifts: %v\n", err))
+			}
 		}
 
 		// call db service to update status
