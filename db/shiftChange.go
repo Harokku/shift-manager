@@ -72,7 +72,7 @@ func (s *ShiftChange) GetAll(dest *[]ShiftChange) error {
 					FROM shift_change s
 						INNER JOIN operators a on s.applicant_name = a."user"
 						INNER JOIN operators w on s.with_name = w."user"
-					ORDER BY request_timestamp DESC`
+					ORDER BY s.applicant_date DESC`
 
 	rows, err := s.service.Db.Query(sqlStatement, nullTime)
 	if err != nil {
