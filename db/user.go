@@ -28,7 +28,7 @@ func (u User) GetAllUser(dest *[]User) error {
 		rows *sql.Rows
 		err  error
 	)
-	sqlStatement := `select "user", surname, mail
+	sqlStatement := `select "user", surname, name, mail
 					from operators
 					order by surname asc
 					`
@@ -40,7 +40,7 @@ func (u User) GetAllUser(dest *[]User) error {
 
 	for rows.Next() {
 		var user User
-		err = rows.Scan(&user.Id, &user.Surname, &user.Mail)
+		err = rows.Scan(&user.Id, &user.Surname, &user.Name, &user.Mail)
 		if err != nil {
 			return errors.New(fmt.Sprintf("error scanning row: %v/n", err))
 		}
