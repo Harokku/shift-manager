@@ -62,7 +62,7 @@ func PostIllness() echo.HandlerFunc {
 		d = append(d, i.marshalGSheet())
 
 		// Call gsheet api to append data
-		_, err = sheetService.Append("PermessiOrari!A4", d)
+		_, err = sheetService.Append("Malattie!A4", d)
 		if err != nil {
 			return context.String(http.StatusBadRequest, fmt.Sprintf("Error posting data do Google sheet: %v\n", err))
 		}
