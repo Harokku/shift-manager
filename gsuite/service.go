@@ -16,6 +16,7 @@ import (
 type Service struct {
 	srv     *sheets.Service
 	sheetId string
+	License
 }
 
 type CellToUpdate struct {
