@@ -138,6 +138,10 @@ func main() {
 	permissionRequest := e.Group("/permission", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	permissionRequest.POST("/request", api.PostPermission())
 
+	// Illness request (req auth)
+	illnessRequest := e.Group("/illness", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	illnessRequest.POST("/request", api.PostIllness())
+
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	gSheet.GET("", func(context echo.Context) error {
