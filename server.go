@@ -130,6 +130,18 @@ func main() {
 	changeRequest.GET("/all", api.GetAllChanges(&dbService), checkIfRole("manager"))
 	changeRequest.GET("/user", api.GetAllChangesForUser(&dbService))
 
+	// License request (req auth)
+	licenseRequest := e.Group("/license", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	licenseRequest.POST("/request", api.PostLicense())
+
+	// Permission request (req auth)
+	permissionRequest := e.Group("/permission", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	permissionRequest.POST("/request", api.PostPermission())
+
+	// Illness request (req auth)
+	illnessRequest := e.Group("/illness", middleware.JWT([]byte(os.Getenv("SECRET"))))
+	illnessRequest.POST("/request", api.PostIllness())
+
 	// Gsheet group (req auth)
 	gSheet := e.Group("/sheets", middleware.JWT([]byte(os.Getenv("SECRET"))))
 	gSheet.GET("", func(context echo.Context) error {
